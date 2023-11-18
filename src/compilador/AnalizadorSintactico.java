@@ -41,7 +41,10 @@ public class AnalizadorSintactico {
         bloque(0);
 
         verificarTerminal(PUNTO, 1);
+        finalizarPrograma();
+    }
 
+    private void finalizarPrograma() {
         aLexico.escanear();
         gCodigo.fixUp(contVariables);
         gCodigo.volcar();
