@@ -1,7 +1,6 @@
 package compilador;
 
 public enum Terminal {
-        FOR,
         IF,
         CALL,
         CADENA_LITERAL,

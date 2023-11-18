@@ -3,7 +3,6 @@ package compilador;
 /*IMPORTS*/
 
 import static compilador.EntradaSalida.*;
-import static compilador.Terminal.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,22 +31,21 @@ public class AnalizadorLexico {
         this.contLinea = 0;
         this.reservadas = new HashMap<>();
 
-        reservadas.put("CALL", CALL);
-        reservadas.put("BEGIN", BEGIN);
-        reservadas.put("IF", IF);
-        reservadas.put("CONST", CONST);
-        reservadas.put("VAR", VAR);
-        reservadas.put("PROCEDURE", PROCEDURE);
-        reservadas.put("END", END);
-        reservadas.put("THEN", THEN);
-        reservadas.put("WHILE", WHILE);
-        reservadas.put("NOT", NOT);
-        reservadas.put("DO", DO);
-        reservadas.put("ODD", ODD);
-        reservadas.put("READLN", READLN);
-        reservadas.put("WRITELN", WRITELN);
-        reservadas.put("WRITE", WRITE);
-        reservadas.put("FOR", FOR);
+        reservadas.put("CALL", Terminal.CALL);
+        reservadas.put("BEGIN", Terminal.BEGIN);
+        reservadas.put("IF", Terminal.IF);
+        reservadas.put("CONST", Terminal.CONST);
+        reservadas.put("VAR", Terminal.VAR);
+        reservadas.put("PROCEDURE", Terminal.PROCEDURE);
+        reservadas.put("END", Terminal.END);
+        reservadas.put("THEN", Terminal.THEN);
+        reservadas.put("WHILE", Terminal.WHILE);
+        reservadas.put("NOT", Terminal.NOT);
+        reservadas.put("DO", Terminal.DO);
+        reservadas.put("ODD", Terminal.ODD);
+        reservadas.put("READLN", Terminal.READLN);
+        reservadas.put("WRITELN", Terminal.WRITELN);
+        reservadas.put("WRITE", Terminal.WRITE);
         archivo = new File(nameArch);
 
         if (archivo.exists()) {
@@ -91,7 +89,7 @@ public class AnalizadorLexico {
         }
 
         if (caracter == '\uffff') {
-            terminal = EOF;
+            terminal = Terminal.EOF;
             cadena = "";
         } else {
             terminal = switch (caracter) {
@@ -100,11 +98,11 @@ public class AnalizadorLexico {
                     if (caracter == '=') {
                         cadena = ":=";
                         caracter = lectorLee();
-                        yield ASIGNACION;
+                        yield Terminal.ASIGNACION;
                     } else {
                         cadena = ":";
                         usado = true;
-                        yield NULO;
+                        yield Terminal.NULO;
                     }
                 }
                 case '<' -> {
@@ -113,17 +111,17 @@ public class AnalizadorLexico {
                         case '=' -> {
                             cadena = "<=";
                             caracter = lectorLee();
-                            yield MENOR_IGUAL;
+                            yield Terminal.MENOR_IGUAL;
                         }
                         case '>' -> {
                             cadena = "<>";
                             caracter = lectorLee();
-                            yield DISTINTO;
+                            yield Terminal.DISTINTO;
                         }
                         default -> {
                             cadena = "<";
                             usado = true;
-                            yield MENOR;
+                            yield Terminal.MENOR;
                         }
                     };
                 }
@@ -132,68 +130,68 @@ public class AnalizadorLexico {
                     if (caracter == '=') {
                         cadena = ">=";
                         caracter = lectorLee();
-                        yield MAYOR_IGUAL;
+                        yield Terminal.MAYOR_IGUAL;
                     } else {
                         cadena = ">";
                         usado = true;
-                        yield MAYOR;
+                        yield Terminal.MAYOR;
                     }
                 }
                 case '+' -> {
                     cadena = "+";
                     caracter = lectorLee();
-                    yield MAS;
+                    yield Terminal.MAS;
                 }
                 case '-' -> {
                     cadena = "-";
                     caracter = lectorLee();
-                    yield MENOS;
+                    yield Terminal.MENOS;
                 }
                 case '*' -> {
                     cadena = "*";
                     caracter = lectorLee();
-                    yield POR;
+                    yield Terminal.POR;
                 }
                 case '/' -> {
                     cadena = "/";
                     caracter = lectorLee();
-                    yield DIVIDIDO;
+                    yield Terminal.DIVIDIDO;
                 }
                 case '(' -> {
                     cadena = "(";
                     caracter = lectorLee();
-                    yield ABRE_PARENTESIS;
+                    yield Terminal.ABRE_PARENTESIS;
                 }
                 case ')' -> {
                     cadena = ")";
                     caracter = lectorLee();
-                    yield CIERRA_PARENTESIS;
+                    yield Terminal.CIERRA_PARENTESIS;
                 }
                 case '.' -> {
                     cadena = ".";
                     caracter = lectorLee();
-                    yield PUNTO;
+                    yield Terminal.PUNTO;
                 }
                 case ',' -> {
                     cadena = ",";
                     caracter = lectorLee();
-                    yield COMA;
+                    yield Terminal.COMA;
                 }
                 case ';' -> {
                     cadena = ";";
                     caracter = lectorLee();
-                    yield PUNTO_Y_COMA;
+                    yield Terminal.PUNTO_Y_COMA;
                 }
                 case '=' -> {
                     cadena = "=";
                     caracter = lectorLee();
-                    yield IGUAL;
+                    yield Terminal.IGUAL;
                 }
                 case '\'' -> {
                     StringBuilder builder = new StringBuilder("'");
                     while ((caracter = lectorLee()) != '\'') {
                         if ((caracter == '\n') || (caracter == -1) || (caracter == '\r')) {
-                            terminal = NULO;
+                            terminal = Terminal.NULO;
                             break;
                         } else {
                             builder.append((char) caracter);
@@ -202,7 +200,7 @@ public class AnalizadorLexico {
                     builder.append((char) caracter);
                     cadena = builder.toString();
                     caracter = lectorLee();
-                    yield cadena.endsWith("'") ? CADENA_LITERAL : NULO;
+                    yield cadena.endsWith("'") ? Terminal.CADENA_LITERAL : Terminal.NULO;
                 }
                 default -> {
                     yield lectorIdentica();
@@ -212,7 +210,7 @@ public class AnalizadorLexico {
 
         //escribirConSalto(s + " " + cad);
         if (terminal == null) {
-            terminal = NULO;
+            terminal = Terminal.NULO;
             usado = true;
             caracter = lectorLee();
         }
@@ -254,7 +252,7 @@ public class AnalizadorLexico {
             } while (valido);
             try {
                 Integer.parseInt(cadena);
-                symbol = NUMERO;
+                symbol = Terminal.NUMERO;
                 usado = true;
             } catch (Exception e) {
                 identifiError.mostrarError(4, null, cadena);
@@ -273,7 +271,7 @@ public class AnalizadorLexico {
             symbol = (Terminal) reservadas.get(cadena.toUpperCase());
 
             if (symbol == null) {
-                symbol = IDENTIFICADOR;
+                symbol = Terminal.IDENTIFICADOR;
             }
         }
         return symbol;
