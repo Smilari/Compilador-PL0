@@ -41,7 +41,10 @@ public class AnalizadorSintactico {
         bloque(0);
 
         verificarTerminal(PUNTO, 1);
+        finalizarPrograma();
+    }
 
+    private void finalizarPrograma(){
         aLexico.escanear();
         gCodigo.fixUp(contVariables);
         gCodigo.volcar();
@@ -183,7 +186,7 @@ public class AnalizadorSintactico {
                 }
                 aLexico.escanear();
 
-                verificarTerminal(ASIGNACION, 201);
+                verificarTerminal(List.of(ASIGNACION, IGUAL), 201);
                 aLexico.escanear();
 
                 expresion(base, desplazamiento);
@@ -222,6 +225,12 @@ public class AnalizadorSintactico {
                     aLexico.escanear();
                     proposicion(base, desplazamiento);
                 }
+                if(aLexico.compararTerminal(HALT)){
+                    gCodigo.cargarByte(JMP_OPCODE);
+                    gCodigo.cargarEntero(0x588 - (gCodigo.getTopeMemoria() + 4)); //Fin del programa
+                    aLexico.escanear();
+                }
+
                 verificarTerminal(END, 203);
                 aLexico.escanear();
                 break;
