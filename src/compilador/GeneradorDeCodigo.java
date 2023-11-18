@@ -67,7 +67,7 @@ public class GeneradorDeCodigo {
     }
 
     public void fixUp(int contVar) { // Fix-up Final
-        cargarByte(JMP_OPCODE);
+        cargarByte(0xE9);
         cargarEntero(0x588 - (topeMemoria + 4)); //Fin del programa
         cargarEnteroEn(descargarEnteroVon(212) + descargarEnteroVon(204) + topeMemoria - Constantes.TAMAÑO_HEADER, 1793);
         for (int i = 0; i < contVar; i++) {

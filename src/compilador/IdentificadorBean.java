@@ -1,13 +1,13 @@
 package compilador;
 
 public class IdentificadorBean {
-/* DEFINICIONES */
+/*DEFINICIONES*/
     private String nombre;
     private Terminal tipo;
     private int valor;
     
     
-/* CONSTRUCTOR */
+/*CONSTRUCTOR*/
     public IdentificadorBean(String nombre, Terminal tipo, int valor) {
         this.nombre = nombre;
         this.tipo = tipo;
@@ -15,7 +15,7 @@ public class IdentificadorBean {
     }
 
     
-/* METODOS */
+/*METODOS*/
     public String getNombre() {
         return nombre;
     }

@@ -46,7 +46,6 @@ public class AnalizadorLexico {
         reservadas.put("READLN", Terminal.READLN);
         reservadas.put("WRITELN", Terminal.WRITELN);
         reservadas.put("WRITE", Terminal.WRITE);
-        reservadas.put("HALT", Terminal.HALT);
         archivo = new File(nameArch);
 
         if (archivo.exists()) {

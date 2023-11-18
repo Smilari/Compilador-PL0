@@ -21,9 +21,10 @@ public class AnalizadorSemantico {
     public int buscarIdentificador(int inicio, int fin, String nombreIdent) {
         int i = inicio;
         while (i >= fin) {
-
-            if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) {return i;} // Reconoce identificadores sin tener en cuenta mayúsculas o minusculas.
-//            if (identBean[i].getNombre().equals(nombreIdent)) {return i;}  // No reconoce identificadores si no son exactamente iguales.
+//            if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) {return i;}
+            if (identBean[i].getNombre().equals(nombreIdent)) {
+                return i;
+            }
 
             i--;
         }
