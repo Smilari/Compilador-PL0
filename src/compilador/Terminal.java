@@ -1,5 +1,12 @@
 package compilador;
 
+/**
+ * Representa los diferentes símbolos terminales que pueden aparecer en el lenguaje PL/0.
+ * <p>
+ * Esta enumeración define una lista de palabras clave, operadores, y símbolos que son reconocidos
+ * por el compilador durante el proceso de análisis léxico y sintáctico.
+ */
+
 public enum Terminal {
         IF,
         CALL,

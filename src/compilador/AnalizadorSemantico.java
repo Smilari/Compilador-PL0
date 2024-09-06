@@ -2,63 +2,74 @@ package compilador;
 
 import static compilador.Constantes.*;
 
+/**
+ * Detecta errores como inconsistencias de tipos u operaciones con objetos no declarados.
+ */
 public class AnalizadorSemantico {
-    /* DEFINICIONES */
-    private IdentificadorBean identBean[];
-    private IndicadorDeErrores auxError;
-    private IndicadorDeErrores indicaErrores;
 
+    /**
+     * Arreglo que representa la tabla de identificadores utilizados en el programa.
+     * Cada entrada contiene un objeto IdentificadorBean que guarda el nombre, tipo y valor del identificador.
+     */
+    private final IdentificadorBean[] identBean;
+    private final IndicadorDeErrores indicaErrores;
 
-    /* CONSTRUCTOR */
-    public AnalizadorSemantico(IndicadorDeErrores auxError) {
+    /**
+     * Inicializa la tabla de identificadores (identBean) y el manejador de errores.
+     *
+     * @param indicaErrores Instancia de IndicadorDeErrores utilizada para gestionar errores semánticos.
+     */
+    public AnalizadorSemantico(IndicadorDeErrores indicaErrores) {
         identBean = new IdentificadorBean[Constantes.CANT_MAX_IDENT];
-        this.auxError = auxError;
-        indicaErrores = new IndicadorDeErrores();
+        this.indicaErrores = indicaErrores;
     }
 
-
-    /* METODOS */
+    /**
+     * Busca un identificador en la tabla de identificadores (identBean[]), comenzando desde una posición 'inicio'
+     * y retrocediendo hasta la posición 'fin'.
+     *
+     * @param inicio      Posición inicial desde donde se comienza la búsqueda.
+     * @param fin         Posición final hasta donde se realiza la búsqueda.
+     * @param nombreIdent Nombre del identificador a buscar.
+     * @return La posición del identificador si es encontrado; de lo contrario, retorna -1.
+     */
     public int buscarIdentificador(int inicio, int fin, String nombreIdent) {
         int i = inicio;
         while (i >= fin) {
-//            if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) {return i;}
-            if (identBean[i].getNombre().equals(nombreIdent)) {
-                return i;
-            }
+            // Compara el nombre del identificador con el nombre buscador (ignorando mayúsculas y minúsculas)
+            // if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) return i;
 
+            // Compara el nombre del identificador con el nombre buscado.
+            if (identBean[i].getNombre().equals(nombreIdent)) return i;
             i--;
         }
         return -1;
     }
 
+    /**
+     * Carga un identificador en la tabla de identificadores (identBean[]) en una posición específica.
+     * Si la posición especificada excede el tamaño máximo de la tabla (CANT_MAX_IDENT), se muestra un error.
+     *
+     * @param nombreIdent Nombre del identificador a cargar.
+     * @param tipo Tipo del identificador.
+     * @param valor Valor del identificador.
+     * @param pos Posición en la tabla de identificadores donde se cargará el identificador.
+     */
     public void cargarIdentificador(String nombreIdent, Terminal tipo, int valor, int pos) {
         if (pos > CANT_MAX_IDENT - 1) {
             indicaErrores.mostrarError(506, null, null);
         } else {
             identBean[pos] = new IdentificadorBean(nombreIdent, tipo, valor);
         }
-
     }
 
+    /**
+     * Retorna el IdentificadorBean en la posición @ de la tabla de identificadores.
+     *
+     * @param pos Posición en la tabla de identificadores.
+     * @return Objeto IdentificadorBean correspondiente a la posición dada.
+     */
     public IdentificadorBean buscarInfo(int pos) {
         return identBean[pos];
     }
 }
-/* DOCUMENTACION */
-/*
-Se encarga de detectar errores como inconsistencia 
-de tipos u operaciones con objetos no declarados. 
-
-El análisis sintáctico no garantiza que un programa esté libre de 
-errores. Inconsistencias de tipo.
-
-Para el análisis semántico, los identificadores se buscarán en toda 
-la tabla, comenzando en la posición BASE+DESPLAZAMIENTO-1 y retrocediendo 
-hasta la posición 0. 
-En caso de no encontrarse el identificador, deberá darse aviso de la falta de 
-declaración. 
-
-Una vez hallado el identificador en la tabla, con el campo TIPO podrá 
-verificarse si el identificador es semánticamente correcto en la posición 
-del programa donde fue encontrado.
-*/

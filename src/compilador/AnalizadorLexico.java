@@ -1,9 +1,6 @@
 package compilador;
 
-/*IMPORTS*/
-
 import static compilador.EntradaSalida.*;
-
 import static compilador.Terminal.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,27 +8,43 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.io.File;
 
-
+/**
+ * La tarea principal del analizador lexico es leer el archivo fuente de entrada y reconocer los distintos símbolos y
+ * token válidos del lenguaje PL0. También se encarga de manejar los errores léxicos, como caracteres no válidos,
+ * y de llevar un seguimiento del número de líneas en el código fuente.
+ * <p>
+ * Las principales responsabilidades del analizador léxico incluyen:
+ * <ul>
+ *   <li>Ignorar separadores como espacios en blanco, tabulaciones y comentarios.</li>
+ *   <li>Reconocer símbolos válidos e informar sobre los inválidos.</li>
+ *   <li>Llevar la cuenta de las líneas en el programa fuente.</li>
+ *   <li>Generar un listado numerado de las líneas de código a medida que se leen.</li>
+ * </ul>
+ */
 public class AnalizadorLexico {
-    /* DEFINICIONES */
+
     private Terminal terminal;
-    private File archivo;
     private BufferedReader lector;
-    private HashMap reservadas;
+    private final HashMap<String, Terminal> reservadas;
     private String cadena;
     private boolean usado;
     private char caracter;
     private int contLinea;
-    private IndicadorDeErrores identifiError;
+    private final IndicadorDeErrores indicaErrores;
 
-
-    /* CONSTRUCTOR */
+    /**
+     * Inicializa los componentes necesarios para la lectura y análisis del archivo fuente.
+     *
+     * @param ideError Instancia de la clase IndicadorDeErrores para manejar los errores durante el análisis.
+     * @param nameArch Nombre del archivo fuente que se va a leer y analizar.
+     */
     public AnalizadorLexico(IndicadorDeErrores ideError, String nameArch) {
-        this.identifiError = ideError;
+        this.indicaErrores = ideError;
         this.cadena = "";
         this.contLinea = 0;
         this.reservadas = new HashMap<>();
 
+        // Inicialización del mapa de palabras reservadas
         reservadas.put("CALL", CALL);
         reservadas.put("BEGIN", BEGIN);
         reservadas.put("IF", IF);
@@ -47,7 +60,7 @@ public class AnalizadorLexico {
         reservadas.put("READLN", READLN);
         reservadas.put("WRITELN", WRITELN);
         reservadas.put("WRITE", WRITE);
-        archivo = new File(nameArch);
+        File archivo = new File(nameArch);
 
         if (archivo.exists()) {
             escribirConSalto("\nSe abrio con exito el archivo: " + nameArch + ".\n\n");
@@ -63,21 +76,39 @@ public class AnalizadorLexico {
         escribir("  " + contLinea + ": ");
     }
 
-
-    /* METODOS */
+    /**
+     * Compara la terminal actual con una terminal dada.
+     *
+     * @param terminal Terminal con la cual comparar.
+     * @return {@code true} si la terminal actual es igual a la dada; de lo contrario, {@code false}.
+     */
     public Boolean compararTerminal(Terminal terminal) {
         return this.terminal == terminal;
     }
 
+    /**
+     * Devuelve la cadena del último token identificado.
+     *
+     * @return La cadena que representa el token identificado.
+     */
     public String getCadena() {
         return cadena;
     }
 
+    /**
+     * Devuelve la terminal actual identificada.
+     *
+     * @return Terminal actual.
+     */
     public Terminal getTerminal() {
         return terminal;
     }
 
-    public Terminal escanear() {
+    /**
+     * Método principal que lee caracteres del archivo fuente y
+     * determina los tokens correspondientes.
+     */
+    public void escanear() {
         cadena = "";
 
         while (caracter == ' ' || caracter == '\t' || caracter == '\n' || caracter == '\r') {
@@ -191,21 +222,19 @@ public class AnalizadorLexico {
                 case '\'' -> {
                     StringBuilder builder = new StringBuilder("'");
                     while ((caracter = lectorLee()) != '\'') {
-                        if ((caracter == '\n') || (caracter == -1) || (caracter == '\r')) {
+                        if (caracter == '\n' || caracter == '\r') {
                             terminal = NULO;
                             break;
                         } else {
-                            builder.append((char) caracter);
+                            builder.append(caracter);
                         }
                     }
-                    builder.append((char) caracter);
+                    builder.append(caracter);
                     cadena = builder.toString();
                     caracter = lectorLee();
                     yield cadena.endsWith("'") ? CADENA_LITERAL : NULO;
                 }
-                default -> {
-                    yield lectorIdentica();
-                }
+                default -> lectorIdentifica();
             };
         }
 
@@ -216,9 +245,13 @@ public class AnalizadorLexico {
             caracter = lectorLee();
         }
 
-        return terminal;
     }
 
+    /**
+     * Lee el siguiente carácter del archivo fuente.
+     *
+     * @return El siguiente carácter leído del archivo.
+     */
     public char lectorLee() {
         char caracter = 0;
         try {
@@ -236,7 +269,12 @@ public class AnalizadorLexico {
         return caracter;
     }
 
-    private Terminal lectorIdentica() {
+    /**
+     * Método auxiliar que maneja el reconocimiento de identificadores y números en el código fuente.
+     *
+     * @return Terminal identificada.
+     */
+    private Terminal lectorIdentifica() {
         cadena = "";
         Terminal symbol = null;
         boolean valido = true;
@@ -256,7 +294,7 @@ public class AnalizadorLexico {
                 symbol = NUMERO;
                 usado = true;
             } catch (Exception e) {
-                identifiError.mostrarError(4, null, cadena);
+                indicaErrores.mostrarError(4, null, cadena);
             }
 
         } else if (Character.isLetter(caracter)) {
@@ -269,7 +307,7 @@ public class AnalizadorLexico {
                 }
             } while (valido);
             usado = true;
-            symbol = (Terminal) reservadas.get(cadena.toUpperCase());
+            symbol = reservadas.get(cadena.toUpperCase());
 
             if (symbol == null) {
                 symbol = IDENTIFICADOR;
@@ -278,17 +316,3 @@ public class AnalizadorLexico {
         return symbol;
     }
 }
-
-
-/*DOCUMENTACION*/
-/*
-    La tarea del analizador léxico consiste en: 
- a. Saltear los separadores (blancos, tabulaciones, comentarios). 
- b. Reconocer los símbolos válidos e informar sobre los no válidos. 
- c. Llevar la cuenta de los renglones del programa.
- d. Copiar los caracteres de entrada a la salida, generando un listado 
- con los renglones numerados.
-
-Se encarga de reconocer los símbolos del lenguaje contenidos en el código 
-fuente del programa a compilar.
-*/

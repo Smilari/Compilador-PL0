@@ -1,7 +1,5 @@
 package compilador;
 
-/* IMPORTS */
-
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -9,31 +7,43 @@ import java.io.IOException;
 
 import static compilador.Constantes.*;
 
-
+/**
+ * Se encarga de la generación de código objeto a partir de un código intermedio,
+ * permitiendo la creación de archivos ejecutables o de otro tipo a partir de datos binarios generados.
+ * Esta clase es parte del módulo de compilación, y su principal objetivo es convertir el código intermedio
+ * en un formato que pueda ser ejecutado por la máquina de destino.
+ */
 public class GeneradorDeCodigo {
-    /* DEFINICIONES */
-    private byte memoria[];
-    private String nameArch;
+
+    private final byte[] memoria;
+    private final String nameArch;
     private int topeMemoria;
-    private DataOutputStream dataStream;
-    private IndicadorDeErrores indicaErrores;
+    private final IndicadorDeErrores indicaErrores;
 
-
-    /* CONSTRUCTOR */
-    public GeneradorDeCodigo(String nameArch, IndicadorDeErrores indiacaErrores) {
+    /**
+     * Constructor que inicializa la memoria, carga un bloque fijo de datos iniciales, establece el tope de memoria,
+     * el nombre del archivo de salida, y el indicador de errores.
+     *
+     * @param nameArch       Nombre del archivo de salida.
+     * @param indicaErrores Indicador de errores utilizado para manejar errores durante la generación de código.
+     */
+    public GeneradorDeCodigo(String nameArch, IndicadorDeErrores indicaErrores) {
         memoria = new byte[Constantes.TOPE_MEMORIA_MAX];
         cargarBloqueFijo();
         topeMemoria = Constantes.TOPE_MEMORIA_INICIAL;
         this.nameArch = nameArch;
-        this.indicaErrores = indiacaErrores;
+        this.indicaErrores = indicaErrores;
     }
 
-    /* METODOS */
+    /**
+     * Vuelca el contenido de la memoria al archivo especificado por 'nameArch'.
+     * Utiliza DataOutputStream para escribir los datos en formato binario.
+     */
     public void volcar() {
         try {
             FileOutputStream file = new FileOutputStream(nameArch);
             BufferedOutputStream bufferStream = new BufferedOutputStream(file);
-            dataStream = new DataOutputStream(bufferStream);
+            DataOutputStream dataStream = new DataOutputStream(bufferStream);
             for (int i = 0; i < topeMemoria; i++) {
                 dataStream.writeByte(memoria[i]);
             }
@@ -43,43 +53,74 @@ public class GeneradorDeCodigo {
         }
     }
 
+    /**
+     * Carga un byte en la posición actual de topeMemoria y luego incrementa topeMemoria.
+     *
+     * @param aByte Byte que se va a cargar en memoria.
+     */
     public void cargarByte(int aByte) {
         memoria[topeMemoria] = (byte) aByte;
         topeMemoria++;
     }
 
+    /**
+     * Carga un byte en una posición específica 'pos' dentro de la memoria.
+     *
+     * @param aByte Byte que se va a cargar en memoria.
+     * @param pos   Posición en la que se cargará el byte.
+     */
     public void cargarByteEn(int aByte, int pos) {
         memoria[pos] = (byte) aByte;
     }
 
-    public void cargarEntero(int enteger) {
+    /**
+     * Carga un entero de 4 bytes en la memoria en formato little-endian,
+     * empezando desde la posición actual de topeMemoria.
+     *
+     * @param integer Entero que se va a cargar en memoria.
+     */
+    public void cargarEntero(int integer) {
         for (int i = 0; i < 4; i++) {
-            cargarByte(enteger & 0xFF);
-            enteger = enteger >> 8;
+            cargarByte(integer & 0xFF);
+            integer = integer >> 8;
         }
     }
 
-    public void cargarEnteroEn(int enteger, int pos) {
+    /**
+     * Carga un entero de 4 bytes en formato little-endian en una posición específica 'pos' dentro de la memoria.
+     *
+     * @param integer Entero que se va a cargar en memoria.
+     * @param pos Posición en la que se cargará el entero.
+     */
+    public void cargarEnteroEn(int integer, int pos) {
         for (int i = 0; i < 4; i++) {
-            cargarByteEn(enteger & 0xFF, pos + i);
-            enteger = enteger >> 8;
+            cargarByteEn(integer & 0xFF, pos + i);
+            integer = integer >> 8;
         }
     }
 
-    public void fixUp(int contVar) { // Fix-up Final
+    /**
+     * Realiza ajustes finales en la memoria antes de volcarla a un archivo.
+     * <p>
+     * Esta función carga el código de finalización, rellena espacios vacíos y ajusta
+     * los tamaños de las secciones de código y datos según los alineamientos requeridos.
+     *
+     * @param contVar Cantidad de variables de control.
+     */
+    public void fixUp(int contVar) {
         cargarByte(JMP_OPCODE);
         cargarEntero(0x588 - (topeMemoria + 4)); //Fin del programa
-        cargarEnteroEn(descargarEnteroVon(212) + descargarEnteroVon(204) + topeMemoria - Constantes.TAMAÑO_HEADER, 1793);
+        cargarEnteroEn(descargarEnteroVon(212) + descargarEnteroVon(204) + topeMemoria - Constantes.TAMANO_HEADER, 1793);
         for (int i = 0; i < contVar; i++) {
             cargarByte(0x00);
         }
-        cargarEnteroEn(topeMemoria - Constantes.TAMAÑO_HEADER, 0x01A0);
+        cargarEnteroEn(topeMemoria - Constantes.TAMANO_HEADER, 0x01A0);
         int fileAlignment = descargarEnteroVon(220);
         while (topeMemoria % fileAlignment != 0) {
             cargarByte(0x00);
         }
-        int sizeOfCodeSection = topeMemoria - Constantes.TAMAÑO_HEADER;
-        int sizeOfRawData = topeMemoria - Constantes.TAMAÑO_HEADER;
+        int sizeOfCodeSection = topeMemoria - Constantes.TAMANO_HEADER;
+        int sizeOfRawData = topeMemoria - Constantes.TAMANO_HEADER;
         cargarEnteroEn(sizeOfCodeSection, 188);
         cargarEnteroEn(sizeOfRawData, 424);
         int sectionAlignment = descargarEnteroVon(216);
@@ -87,29 +128,50 @@ public class GeneradorDeCodigo {
         cargarEnteroEn((2 + sizeOfRawData / sectionAlignment) * sectionAlignment, 208);
     }
 
+    /** @return Retorna el valor actual de topeMemoria. */
     public int getTopeMemoria() {
         return topeMemoria;
     }
 
+    /** @param topeMemoria Establece un nuevo valor para topeMemoria. */
     public void setTopeMemoria(int topeMemoria) {
         this.topeMemoria = topeMemoria;
     }
 
+    /**
+     * Calcula y retorna la ubicación de una cadena en la memoria.
+     * @return Ubicación de la cadena en memoria.
+     */
     public int getUbicacionCadena() {
-        return descargarEnteroVon(212) + descargarEnteroVon(204) + topeMemoria - Constantes.TAMAÑO_HEADER + 15;
+        return descargarEnteroVon(212) + descargarEnteroVon(204) + topeMemoria - Constantes.TAMANO_HEADER + 15;
     }
 
+    /**
+     * Descarga (lee) un entero de 4 bytes de la memoria desde una posición específica pos en formato little-endian.
+     *
+     * @param pos Posición en la memoria desde donde se descargará el entero.
+     * @return Entero de 4 bytes leído de la memoria.
+     */
     public int descargarEnteroVon(int pos) {
-        return memoria[pos] * 0x1
+        return memoria[pos]
                 + memoria[pos + 1] * 0x100
                 + memoria[pos + 2] * 0x10000
                 + memoria[pos + 3] * 0x1000000;
     }
 
+    /**
+     * Descarga (lee) un byte de la memoria desde una posición específica pos.
+     *
+     * @param pos Posición en la memoria desde donde se descargará el byte.
+     * @return Byte leído de la memoria.
+     */
     public Byte descargarByteVon(int pos) {
         return memoria[pos];
     }
 
+    /**
+     * Carga la instrucción POP en la memoria si el último byte cargado no es un PUSH.
+     */
     public void cargarPOP() {
         if (memoria[topeMemoria - 1] == PUSH_EAX_OPCODE) {
             topeMemoria--;
@@ -118,6 +180,13 @@ public class GeneradorDeCodigo {
         }
     }
 
+    /**
+     * Inicializa un bloque fijo de datos en las primeras posiciones de la memoria.
+     * <p>
+     * Este bloque representa el encabezado de un archivo ejecutable DOS (MZ Header),
+     * que contiene metadatos esenciales y configuraciones iniciales necesarias para
+     * la ejecución del archivo en un entorno MS-DOS.
+     */
     private void cargarBloqueFijo() {
         memoria[0] = 0x4D; // 'M' (Magic number)
         memoria[1] = 0x5A; // 'Z'
@@ -1858,10 +1927,3 @@ public class GeneradorDeCodigo {
         memoria[1791] = (byte) 0xC3;
     }
 }
-/*DOCUMENTACION*/
-/*
-La eneración de código es llevada a cabo por un módulo 
-que usualmente es reemplazable, con lo cual se pueden obtener 
-códigos objeto para distintas plataformas a partir de un mismo código intermedio.
-
-*/

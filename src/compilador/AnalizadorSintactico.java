@@ -1,25 +1,28 @@
 package compilador;
 
-/*IMPORTS*/
-
 import static compilador.Terminal.*;
 import static compilador.Constantes.*;
 import static compilador.EntradaSalida.*;
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Clase encargada de analizar la sintaxis del código fuente,
+ * verificando su conformidad con las reglas del lenguaje y generando código intermedio.
+ */
 public class AnalizadorSintactico {
-    /* DEFINICIONES */
-    private AnalizadorLexico aLexico;
-    private IndicadorDeErrores indicaErrores;
-    private AnalizadorSemantico aSemantico;
-    private GeneradorDeCodigo gCodigo;
+
+    private final AnalizadorLexico aLexico;
+    private final IndicadorDeErrores indicaErrores;
+    private final AnalizadorSemantico aSemantico;
+    private final GeneradorDeCodigo gCodigo;
     private int contVariables;
 
-
-    /* CONSTRUCTOR */
+    /**
+     * @param indicaErrores Instancia para mostrar errores de sintaxis.
+     * @param aLexico Instancia del analizador léxico.
+     * @param gCodigo Instancia del generador de código.
+     */
     public AnalizadorSintactico(IndicadorDeErrores indicaErrores, AnalizadorLexico aLexico, GeneradorDeCodigo gCodigo) {
         this.aLexico = aLexico;
         this.gCodigo = gCodigo;
@@ -28,22 +31,26 @@ public class AnalizadorSintactico {
         contVariables = 0;
     }
 
-
-    /* METODOS */
+    /**
+     * Método principal para analizar el programa completo.
+     */
     public void programa() {
         /*while (aLexico.getTerminal() != EOF) {
             EntradaSalida.escribir("\n[" + aLexico.getCadena() + "]:" + aLexico.getTerminal() + "\n");
             aLexico.escanear();
         }*/
-        aLexico.escanear();
+        aLexico.escanear(); // Escanea el primer token
         gCodigo.cargarByte(EDI_OPCODE);
         gCodigo.cargarEntero(0);
-        bloque(0);
+        bloque(0); // Analiza el bloque principal del programa
 
-        verificarTerminal(PUNTO, 1);
+        verificarTerminal(PUNTO, 1); // Verifica el punto final del programa
         finalizarPrograma();
     }
 
+    /**
+     * Finaliza la compilación del programa, escribiendo el código intermedio y mostrando un mensaje de éxito.
+     */
     private void finalizarPrograma() {
         aLexico.escanear();
         gCodigo.fixUp(contVariables);
@@ -54,22 +61,39 @@ public class AnalizadorSintactico {
         escribirConSalto("\nEl programa ha compilado correctamente.");
     }
 
+    /**
+     * Verifica si el token actual coincide con el esperado y muestra un error en caso contrario.
+     *
+     * @param terminalEsperado El terminal esperado.
+     * @param codigoError Código del error a mostrar.
+     */
     private void verificarTerminal(Terminal terminalEsperado, int codigoError) {
         if (!aLexico.compararTerminal(terminalEsperado)) {
             indicaErrores.mostrarError(codigoError, aLexico.getTerminal(), aLexico.getCadena());
         }
     }
 
+    /**
+     * Verifica si el token actual pertenece a una lista de terminales esperados y muestra un error en caso contrario.
+     *
+     * @param terminalesEsperados Lista de terminales esperados.
+     * @param codigoError Código del error a mostrar.
+     */
     private void verificarTerminal(List<Terminal> terminalesEsperados, int codigoError) {
         if (!terminalesEsperados.contains(aLexico.getTerminal())) {
             indicaErrores.mostrarError(codigoError, aLexico.getTerminal(), aLexico.getCadena());
         }
     }
 
+    /**
+     * Analiza un bloque de código, que puede contener declaraciones de constantes, variables, procedimientos y proposiciones.
+     *
+     * @param base Base de direcciones para las variables.
+     */
     public void bloque(int base) {
         int desplazamiento = 0;
         int resultadoBusqueda;
-        String nombreDelIdent = "";
+        String nombreDelIdent;
         gCodigo.cargarByte(JMP_OPCODE);
         gCodigo.cargarEntero(0x00);
         int inicioBloque = gCodigo.getTopeMemoria();
@@ -158,6 +182,7 @@ public class AnalizadorSintactico {
             aLexico.escanear();
         }
 
+        // Corrige la dirección de salto del bloque
         int origen = inicioBloque;
         int destino = gCodigo.getTopeMemoria();
         int distancia = destino - origen;
@@ -165,9 +190,15 @@ public class AnalizadorSintactico {
         proposicion(base, desplazamiento);
     }
 
+    /**
+     * Analiza una proposición, que puede ser una asignación, una llamada a procedimiento, una estructura de control, o una entrada/salida.
+     *
+     * @param base Base de direcciones para las variables.
+     * @param desplazamiento Desplazamiento actual para las variables.
+     */
     public void proposicion(int base, int desplazamiento) {
-        int resultadoBusqueda = 0;
-        String nombreDelIdent = "";
+        int resultadoBusqueda;
+        String nombreDelIdent;
         IdentificadorBean resultadoBean;
         Terminal terminalIngresado = aLexico.getTerminal();
 
@@ -346,6 +377,13 @@ public class AnalizadorSintactico {
         }
     }
 
+    /**
+     * Analiza una condición en una expresión lógica. La condición puede ser una negación (NOT),
+     * una expresión con la palabra clave ODD o una comparación entre dos expresiones.
+     *
+     * @param base Base de direcciones para las variables.
+     * @param desplazamiento Desplazamiento actual para las variables.
+     */
     public void condicion(int base, int desplazamiento) {
 
         if (aLexico.compararTerminal(NOT)) {
@@ -355,6 +393,7 @@ public class AnalizadorSintactico {
             aLexico.escanear();
             condicion(base, desplazamiento);
 
+            // Corrige el salto de acuerdo a la negación
             int posSaltoACorregir = gCodigo.getTopeMemoria() - 7;
             byte saltoACorregir = gCodigo.descargarByteVon(posSaltoACorregir);
             Map<Byte, Byte> correccionSalto = Map.of(
@@ -409,6 +448,12 @@ public class AnalizadorSintactico {
         }
     }
 
+    /**
+     * Analiza una expresión matemática, que puede ser una operación binaria o un término.
+     *
+     * @param base Base de direcciones para las variables.
+     * @param desplazamiento Desplazamiento actual para las variables.
+     */
     public void expresion(int base, int desplazamiento) {
         Terminal simbolo = null;
 
@@ -446,6 +491,12 @@ public class AnalizadorSintactico {
         }
     }
 
+    /**
+     * Analiza un término, que puede ser una operación de multiplicación o división.
+     *
+     * @param base Base de direcciones para las variables.
+     * @param desplazamiento Desplazamiento actual para las variables.
+     */
     public void termino(int base, int desplazamiento) {
         factor(base, desplazamiento);
         while (aLexico.compararTerminal(POR) || aLexico.compararTerminal(DIVIDIDO)) {
@@ -470,9 +521,15 @@ public class AnalizadorSintactico {
         }
     }
 
+    /**
+     * Analiza un factor, que puede ser un número o una variable.
+     *
+     * @param base Base de direcciones para las variables.
+     * @param desplazamiento Desplazamiento actual para las variables.
+     */
     public void factor(int base, int desplazamiento) {
         int resultadoBusqueda;
-        String nombreDelIndent = "";
+        String nombreDelIndent;
 
         switch (aLexico.getTerminal()) {
             case IDENTIFICADOR:
@@ -495,7 +552,7 @@ public class AnalizadorSintactico {
                         break;
                     case VAR:
                         gCodigo.cargarByte(MOV_EAX_VAR_OPCODE);
-                        gCodigo.cargarByte(MOV_VAR_EAX_OPCODE2);
+                        gCodigo.cargarByte(MOV_EAX_VAR_OPCODE2);
                         gCodigo.cargarEntero(resultadoBusBean.getValor()); // Numero
                         gCodigo.cargarByte(PUSH_EAX_OPCODE);
                 }
@@ -524,49 +581,3 @@ public class AnalizadorSintactico {
     }
 
 }
-/* DOCUMENTACION */
-/*
-Se encarga de revisar si los símbolos detectados durante el análisis léxico
-aparecen en el orden correcto como para constituir un programa válido.
-
-El proceso de determinar si una frase puede ser generada a partir de
-un conjunto de producciones se denomina parsing.
-
----------------------------------REGLAS---------------------------------
-R1. Reducir el sistema de grafos a la menor cantidad de grafos que sea posible,
-realizando para ello las sustituciones que sean necesarias.
-
-R2. Declarar para cada grafo un procedimiento que contenga las
-sentencias resultantes de aplicarle al grafo las reglas R3 a R7.
-
-R3. Una secuencia de elementos se traduce como una sentencia compuesta:
-    begin
-        T(S1); T(S2); ... T(Sn)
-    end
-(Donde T(Si) es la sentencia obtenida al traducir el grafo Si)
-
-R4. Una opción entre elementos se traduce como una sentencia condicional:
-    if SIM in L1 then T(S1) else
-    if SIM in L2 then T(S2) else
-    if SIM in Ln then T(Sn);
-Donde SIM es el símbolo devuelto por el analizador léxico y Li es
-el conjunto de símbolos iniciales de Si. Siempre que Li conste de
-un único símbolo a, "SIM in Li" podrá expresarse como "SIM = a"
-
-R5. Un bucle de la forma se traduce como la sentencia:
-    while SIM in L do T(S)
-
-R6. Una referencia a otro grafo A se traduce como una sentencia
-de llamada al procedimiento A.
-
-R7. Una referencia a un símbolo terminal x se traduce como la sentencia:
-    if SIM = x then SCANNER(SIM) else ERROR
-Donde ERROR es un procedimiento encargado del tratamiento de los errores.
------------------------------------------------------------------------
-
-El parser funciona haciendo una llamada al scanner (para tener un
-símbolo leído de antemano) y una llamada al procedimiento correspondiente
-al primero de los grafos. A partir de este procedimiento se irán
-realizando llamadas a los demás, hasta que aparezca algún error o se
-termine reconociendo satisfactoriamente el programa leído.
-*/
