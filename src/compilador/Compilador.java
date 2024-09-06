@@ -1,5 +1,7 @@
 package compilador;
 
+import static compilador.EntradaSalida.*;
+
 public class Compilador {
 
 
