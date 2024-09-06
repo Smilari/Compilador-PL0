@@ -60,6 +60,7 @@ public class AnalizadorLexico {
         reservadas.put("READLN", READLN);
         reservadas.put("WRITELN", WRITELN);
         reservadas.put("WRITE", WRITE);
+        reservadas.put("HALT", HALT);
         File archivo = new File(nameArch);
 
         if (archivo.exists()) {

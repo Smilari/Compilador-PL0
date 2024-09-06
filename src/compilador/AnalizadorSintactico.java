@@ -217,7 +217,7 @@ public class AnalizadorSintactico {
                 }
                 aLexico.escanear();
 
-                verificarTerminal(ASIGNACION, 201);
+                verificarTerminal(List.of(ASIGNACION, IGUAL), 201);
                 aLexico.escanear();
 
                 expresion(base, desplazamiento);
@@ -372,6 +372,13 @@ public class AnalizadorSintactico {
                     gCodigo.cargarByte(CALL_OPCODE);
                     gCodigo.cargarEntero(distancia);
                 }
+
+                break;
+
+            case HALT:
+                aLexico.escanear();
+                gCodigo.cargarByte(JMP_OPCODE);
+                gCodigo.cargarEntero(0x588 - (gCodigo.getTopeMemoria() + 4)); //Fin del programa
 
                 break;
         }
