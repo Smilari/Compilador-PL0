@@ -60,6 +60,8 @@ public class AnalizadorLexico {
         reservadas.put("READLN", READLN);
         reservadas.put("WRITELN", WRITELN);
         reservadas.put("WRITE", WRITE);
+        reservadas.put("HALT", HALT);
+        reservadas.put("ELSE", ELSE);
         File archivo = new File(nameArch);
 
         if (archivo.exists()) {
@@ -215,9 +217,16 @@ public class AnalizadorLexico {
                     yield PUNTO_Y_COMA;
                 }
                 case '=' -> {
-                    cadena = "=";
                     caracter = lectorLee();
-                    yield IGUAL;
+                    if (caracter == '=') {
+                        cadena = "==";
+                        caracter = lectorLee();
+                        yield DOBLE_IGUAL;
+                    } else {
+                        cadena = "=";
+                        usado = true;
+                        yield IGUAL;
+                    }
                 }
                 case '\'' -> {
                     StringBuilder builder = new StringBuilder("'");

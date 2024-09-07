@@ -217,7 +217,7 @@ public class AnalizadorSintactico {
                 }
                 aLexico.escanear();
 
-                verificarTerminal(ASIGNACION, 201);
+                verificarTerminal(List.of(ASIGNACION, IGUAL), 201);
                 aLexico.escanear();
 
                 expresion(base, desplazamiento);
@@ -269,9 +269,29 @@ public class AnalizadorSintactico {
                 aLexico.escanear();
 
                 proposicion(base, desplazamiento);
+
+                // Realiza un JMP en el final del if hacia el final del else (calculado después) para continuar con el ciclo del programa.
+                // Solo llega a este punto, si la condición originalmente del if, es verdadera y se ejecutó.
+                gCodigo.cargarByte(JMP_OPCODE);
+                gCodigo.cargarEntero(0x00); // Fix Up
+                int origenSaltoElse = gCodigo.getTopeMemoria();
+
+                // Si la condición es falsa, este fix up sirve para hacer un JMP justo después de la sentencia del if
+                // Y de esta forma ingresar en el else.
                 int destinoSalto = gCodigo.getTopeMemoria();
                 int distanciaSalto = destinoSalto - origenSalto;
                 gCodigo.cargarEnteroEn(distanciaSalto, origenSalto - 4);// Fix Up
+
+                // Verifica si hay un else.
+                if(aLexico.getTerminal() == ELSE){
+                    aLexico.escanear();
+                    proposicion(base, desplazamiento);
+                }
+
+                // Fix up para saber donde hacer el JMP y saltearse el else.
+                destinoSalto = gCodigo.getTopeMemoria();
+                distanciaSalto = destinoSalto - origenSaltoElse;
+                gCodigo.cargarEnteroEn(distanciaSalto, origenSaltoElse - 4); // Fix Up
                 break;
 
             case WHILE:
@@ -374,6 +394,14 @@ public class AnalizadorSintactico {
                 }
 
                 break;
+
+            case HALT:
+                aLexico.escanear();
+                // Hace un JMP hacia el fin del programa
+                gCodigo.cargarByte(JMP_OPCODE);
+                gCodigo.cargarEntero(0x588 - (gCodigo.getTopeMemoria() + 4)); //Fin del programa
+
+                break;
         }
     }
 
@@ -425,7 +453,7 @@ public class AnalizadorSintactico {
             expresion(base, desplazamiento);
             Terminal operador = aLexico.getTerminal();
 
-            verificarTerminal(List.of(IGUAL, DISTINTO, MENOR, MENOR_IGUAL, MAYOR, MAYOR_IGUAL), 301);
+            verificarTerminal(List.of(DOBLE_IGUAL, IGUAL, DISTINTO, MENOR, MENOR_IGUAL, MAYOR, MAYOR_IGUAL), 301);
             aLexico.escanear();
             expresion(base, desplazamiento);
 
@@ -434,6 +462,7 @@ public class AnalizadorSintactico {
             gCodigo.cargarByte(CMP_OPCODE);
             gCodigo.cargarByte(CMP_OPCODE2);
             Map<Terminal, Byte> operadoresCodigo = Map.of(
+                    DOBLE_IGUAL, (byte) JE_OPCODE,
                     IGUAL, (byte) JE_OPCODE,
                     DISTINTO, (byte) JNE_OPCODE,
                     MENOR, (byte) JL_OPCODE,
