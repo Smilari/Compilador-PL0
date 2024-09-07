@@ -136,6 +136,5 @@ Este repositorio contiene diferentes ramas que añaden funcionalidades adicional
 - **Numeros-Lucas**: Implementa la funcionalidad para calcular la sucesión de Lucas.
 - **Numeros-Pell**: Proporciona la capacidad de calcular la secuencia de Pell.
 - **Numeros-Perrin**: Extiende el compilador para calcular la secuencia de Perrin.
-- **Recu**: Similar a `Numeros-Perrin`, pero añade el uso de funciones predeterminadas de predicado como `pred` y `succ` para calcular el predecesor y sucesor de un número.
 
 Cada rama puede ser consultada para detalles específicos sobre las características implementadas y el código correspondiente.
