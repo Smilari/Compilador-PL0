@@ -304,8 +304,13 @@ public class AnalizadorSintactico {
                     nombreDelIdent = aLexico.getCadena();
                     resultadoBusqueda = aSemantico.buscarIdentificador(base + desplazamiento - 1, base, nombreDelIdent);
 
-                    if (resultadoBusqueda == -1 || aSemantico.buscarInfo(resultadoBusqueda).getTipo() != VAR) {
+                    if (resultadoBusqueda == -1) {
                         indicaErrores.mostrarError(502, null, aLexico.getCadena());
+                    }
+
+                    resultadoBean = aSemantico.buscarInfo(resultadoBusqueda);
+                    if (resultadoBean.getTipo() != VAR) {
+                        indicaErrores.mostrarError(503, resultadoBean.getTipo(), aLexico.getCadena());
                     }
                     aLexico.escanear();
 
@@ -372,6 +377,94 @@ public class AnalizadorSintactico {
                     gCodigo.cargarByte(CALL_OPCODE);
                     gCodigo.cargarEntero(distancia);
                 }
+
+                break;
+
+            case FOR:
+                aLexico.escanear();
+
+                verificarTerminal(IDENTIFICADOR, 212);
+                String variableControl = aLexico.getCadena();
+                resultadoBusqueda = aSemantico.buscarIdentificador(base + desplazamiento - 1, 0, variableControl);
+
+                if (resultadoBusqueda == -1) {
+                    indicaErrores.mostrarError(502, aLexico.getTerminal(), aLexico.getCadena());
+                }
+
+                resultadoBean = aSemantico.buscarInfo(resultadoBusqueda);
+                if (resultadoBean.getTipo() != VAR) {
+                    indicaErrores.mostrarError(503, resultadoBean.getTipo(), aLexico.getCadena());
+                }
+
+                aLexico.escanear();
+
+                verificarTerminal(ASIGNACION, 213);
+                aLexico.escanear();
+
+                expresion(base, desplazamiento);
+
+                gCodigo.cargarPOP();
+
+                // Almacena el valor obtenido de la expresión en la variable de control del bucle
+                int posVarControl = resultadoBean.getValor(); // Posición de la variable de control (contador)
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE2);
+                gCodigo.cargarEntero(posVarControl);
+
+                verificarTerminal(TO, 214);
+                aLexico.escanear();
+
+                expresion(base, desplazamiento);
+                inicioCondicion = gCodigo.getTopeMemoria(); // Inicio for
+
+                // Carga el valor actual de la variable de control para comparación
+                gCodigo.cargarByte(MOV_EAX_VAR_OPCODE);
+                gCodigo.cargarEntero(posVarControl);
+
+                // Compara la variable de control con el valor final (Intercambia sus valores para que la variable de control quede en EBX)
+                gCodigo.cargarByte(POP_EBX_OPCODE);
+                gCodigo.cargarByte(XCHG_OPCODE);
+                gCodigo.cargarByte(CMP_OPCODE);
+                gCodigo.cargarByte(CMP_OPCODE2);
+                gCodigo.cargarByte(PUSH_EAX_OPCODE); // Vuelve a pushear EAX (EBX anteriormente) para conservar el valor de la variable final
+
+                // Si la condición es falsa, salta al final del bucle
+                gCodigo.cargarByte(JG_OPCODE);
+                gCodigo.cargarByte(0x00); // Distancia que se llenará más adelante
+
+                int saltoACorregir = gCodigo.getTopeMemoria();
+
+                // Espera la palabra clave DO
+                verificarTerminal(DO, 215);
+                aLexico.escanear();
+
+                // Realiza las operaciones dentro del bucle
+                proposicion(base, desplazamiento);
+
+                // Incrementa la variable de control en '1'
+                gCodigo.cargarByte(MOV_EAX_CONST_OPCODE);
+                gCodigo.cargarEntero(1);
+                gCodigo.cargarByte(PUSH_EAX_OPCODE);
+                gCodigo.cargarByte(POP_EBX_OPCODE);
+                gCodigo.cargarByte(MOV_EAX_VAR_OPCODE);
+                gCodigo.cargarEntero(posVarControl);
+                gCodigo.cargarByte(ADD_OPCODE);
+                gCodigo.cargarByte(ADD_OPCODE2);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE2);
+                gCodigo.cargarEntero(posVarControl);
+
+                // Salta de nuevo al inicio del bucle
+                origen = gCodigo.getTopeMemoria() + 5;
+                destino = inicioCondicion;
+                distancia = destino - origen;
+                gCodigo.cargarByte(JMP_OPCODE);
+                gCodigo.cargarEntero(distancia);
+
+                // Corrige el salto condicional al final del bucle
+                destinoSalto = gCodigo.getTopeMemoria();
+                distanciaSalto = destinoSalto - saltoACorregir;
+                gCodigo.cargarEnteroEn(distanciaSalto, saltoACorregir - 4); // Fix Up
 
                 break;
         }

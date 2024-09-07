@@ -61,6 +61,10 @@ public class IndicadorDeErrores {
             case 209 -> msjError("'[PROPOSICION] -> (READLN) -> (ABRE_PARENTESIS) -> (IDENTIFICADOR) -> (COMA)'", "'IDENTIFICADOR'", terminal, cadena);
             case 210 -> msjError("'[PROPOSICION] -> (WRITE)'", "'ABRE_PARENTESIS'", terminal, cadena);
             case 211 -> msjError("'[PROPOSICION] -> (WRITE) -> (CADENA) o [EXPRESION]'", "'CIERRA_PARENTESIS' o 'COMA'", terminal, cadena);
+            case 212 -> msjError("'[PROPOSICION] -> (FOR)'", "'IDENTIFICADOR'", terminal, cadena);
+            case 213 -> msjError("'[PROPOSICION] -> (FOR) -> (IDENTIFICADOR)'", "'ASIGNACION'", terminal, cadena);
+            case 214 -> msjError("'[PROPOSICION] -> (FOR) -> (IDENTIFICADOR) -> [EXPRESION]'", "'TO'", terminal, cadena);
+            case 215 -> msjError("'[PROPOSICION] -> (FOR) -> (IDENTIFICADOR) -> [EXPRESION] -> TO -> [EXPRESION]'", "'DO'", terminal, cadena);
 
             // Errores de Condición
             case 301 -> msjError("'[CONDICION] -> (EXPRESION)'", "'IGUAL' o 'DISTINTO' o 'MENOR' o 'MENOR_IGUAL' o 'MAYOR' o 'MAYOR_IGUAL'", terminal, cadena);
