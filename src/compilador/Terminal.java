@@ -8,6 +8,8 @@ package compilador;
  */
 
 public enum Terminal {
+        FOR,
+        TO,
         IF,
         CALL,
         CADENA_LITERAL,

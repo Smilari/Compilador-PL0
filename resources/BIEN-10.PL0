@@ -1,8 +1,0 @@
-var x;
-begin 
-	readln(x);
-	if not(x>3)
-		then writeln('Hola');
-	if x>3 then
-		writeln('Chau')
-end.

@@ -37,10 +37,10 @@ public class AnalizadorSemantico {
         int i = inicio;
         while (i >= fin) {
             // Compara el nombre del identificador con el nombre buscador (ignorando mayúsculas y minúsculas)
-            // if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) return i;
+             if(identBean[i].getNombre().equalsIgnoreCase(nombreIdent)) return i;
 
             // Compara el nombre del identificador con el nombre buscado.
-            if (identBean[i].getNombre().equals(nombreIdent)) return i;
+//            if (identBean[i].getNombre().equals(nombreIdent)) return i;
             i--;
         }
         return -1;
