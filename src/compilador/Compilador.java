@@ -16,8 +16,8 @@ public class Compilador {
      * @param args Argumentos de la línea de comandos.
      */
     public static void main(String[] args) {
-        String nameArch = leer("Ingrese el nombre del archivo a compilar: ");
-//        String nameArch = args[0];
+//        String nameArch = leer("Ingrese el nombre del archivo a compilar: ");
+        String nameArch = args[0];
         String filePath = "resources/" + nameArch;
 
         IndicadorDeErrores indicaErrores = new IndicadorDeErrores();

@@ -35,6 +35,14 @@ El procedimiento `perrin` realiza los cálculos de la sucesión de Perrin y el p
 - **Ubicación**: Líneas 456 y 465
 - **Descripción**: Se maneja el comportamiento del símbolo `==` (mismo comportamiento que el símbolo `=`) .
 
+### 6. Funcionalidad del 'PRED'
+- **Ubicación**: Líneas 564-578
+- **Descripción**: Se agregó la funcionalidad de `PRED` como parte de {factor} para restar '1' a la expresión deseada.
+
+### 7. Funcionalidad del 'SUCC'
+- **Ubicación**: Líneas 406-445
+- **Descripción**: Se agregó la funcionalidad de `SUCC` como parte de {proposición} para sumar '1' a la expresión deseada.
+
 ## Analizador Léxico
 
 ### 1. Palabra Reservada 'HALT'
@@ -50,25 +58,43 @@ El procedimiento `perrin` realiza los cálculos de la sucesión de Perrin y el p
 - **Ubicación**: Líneas 219-230
 - **Descripción**: Cuando se lee un `=` se acepta la lectura de un segundo.
 
+### 4. Palabra Reservada 'PRED'
+
+- **Ubicación**: Línea 65
+- **Descripción**: Se agregó como palabra reservada la instrucción `PRED`.
+
+### 5. Palabra Reservada 'SUCC'
+
+- **Ubicación**: Línea 66
+- **Descripción**: Se agregó como palabra reservada la instrucción `SUCC`.
+
 ## Analizador Semántico
 
 ### 1. Identificadores no 'Case Sensitive'
-- **Ubicación**: Lineas 40 y 43
+- **Ubicación**: Líneas 40 y 43
 - **Descripción**: Cambiado para que los identificadores no sean 'Case Sensitive' (sensible a mayúsculas y minúsculas)
 
 ## Terminal
 
 ### 1. Terminal 'HALT'
-- **Ubicación**: Linea 11
+- **Ubicación**: Línea 11
 - **Descripción**: Se agregó como terminal a `HALT`.
 
 ### 2. Terminal 'ELSE'
-- **Ubicación**: Linea 12
+- **Ubicación**: Línea 12
 - **Descripción**: Se agregó como terminal a `ELSE`.
 
 ### 3. Terminal 'DOBLE_IGUAL'
-- **Ubicación**: Linea 13
+- **Ubicación**: Línea 13
 - **Descripción**: Se agregó como terminal a `DOBLE_IGUAL`.
+
+### 4. Terminal 'PRED'
+- **Ubicación**: Línea 14
+- **Descripción**: Se agregó como terminal a `PRED`.
+
+### 5. Terminal 'SUCC'
+- **Ubicación**: Línea 15
+- **Descripción**: Se agregó como terminal a `SUCC`.
 
 ---
 

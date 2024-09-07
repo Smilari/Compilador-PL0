@@ -62,6 +62,8 @@ public class AnalizadorLexico {
         reservadas.put("WRITE", WRITE);
         reservadas.put("HALT", HALT);
         reservadas.put("ELSE", ELSE);
+        reservadas.put("PRED", PRED);
+        reservadas.put("SUCC", SUCC);
         File archivo = new File(nameArch);
 
         if (archivo.exists()) {

@@ -11,6 +11,8 @@ public enum Terminal {
         HALT,
         ELSE,
         DOBLE_IGUAL,
+        PRED,
+        SUCC,
         IF,
         CALL,
         CADENA_LITERAL,

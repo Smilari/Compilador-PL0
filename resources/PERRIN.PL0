@@ -16,13 +16,13 @@ begin
   n2 = k2; 
   n3 := -k3;
   cont := 0;
-  while k1 + k3 - 1 == K2 do
+  while pred(k1 + k3) == K2 do
     begin
       call perrin;
       if cont < 15
         then begin
                write (pe, ' ');
-               cont := cont + 1
+               succ(cont)
              end
         else begin 
                writeln;

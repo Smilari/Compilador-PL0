@@ -402,6 +402,47 @@ public class AnalizadorSintactico {
                 gCodigo.cargarEntero(0x588 - (gCodigo.getTopeMemoria() + 4)); //Fin del programa
 
                 break;
+
+            case SUCC:
+                aLexico.escanear();
+                verificarTerminal(ABRE_PARENTESIS, 402);
+                aLexico.escanear();
+
+
+                nombreDelIdent = aLexico.getCadena();
+                resultadoBusqueda = aSemantico.buscarIdentificador(base + desplazamiento - 1, 0, nombreDelIdent);
+
+                // Verifica terminal identificador
+                if (resultadoBusqueda == -1) {
+                    indicaErrores.mostrarError(502, null, aLexico.getCadena());
+                }
+
+                resultadoBean = aSemantico.buscarInfo(resultadoBusqueda);
+                if (resultadoBean.getTipo() != VAR) {
+                    indicaErrores.mostrarError(503, resultadoBean.getTipo(), aLexico.getCadena());
+                }
+                aLexico.escanear();
+
+                verificarTerminal(CIERRA_PARENTESIS, 402);
+
+                // Actualiza el valor con un +1
+                gCodigo.cargarByte(MOV_EAX_VAR_OPCODE);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE2);
+                gCodigo.cargarEntero(resultadoBean.getValor());
+                gCodigo.cargarByte(XCHG_OPCODE);
+                gCodigo.cargarByte(MOV_EAX_CONST_OPCODE);
+                gCodigo.cargarEntero(1);
+                gCodigo.cargarByte(XCHG_OPCODE);
+                gCodigo.cargarByte(ADD_OPCODE);
+                gCodigo.cargarByte(ADD_OPCODE2);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE);
+                gCodigo.cargarByte(MOV_VAR_EAX_OPCODE2);
+                gCodigo.cargarEntero(resultadoBean.getValor());
+
+                if (aLexico.compararTerminal(CIERRA_PARENTESIS)) {
+                    aLexico.escanear();
+                }
+                break;
         }
     }
 
@@ -561,6 +602,22 @@ public class AnalizadorSintactico {
         String nombreDelIndent;
 
         switch (aLexico.getTerminal()) {
+            case PRED:
+                aLexico.escanear();
+                verificarTerminal(ABRE_PARENTESIS, 402);
+
+                expresion(base, desplazamiento);
+
+                // Actualiza con un -1 la expresion
+                gCodigo.cargarByte(POP_EBX_OPCODE);
+                gCodigo.cargarByte(MOV_EAX_CONST_OPCODE);
+                gCodigo.cargarEntero(1);
+                gCodigo.cargarByte(XCHG_OPCODE);
+                gCodigo.cargarByte(SUB_OPCODE);
+                gCodigo.cargarByte(SUB_OPCODE2);
+                gCodigo.cargarByte(PUSH_EAX_OPCODE);
+                break;
+
             case IDENTIFICADOR:
                 nombreDelIndent = aLexico.getCadena();
                 resultadoBusqueda = aSemantico.buscarIdentificador(base + desplazamiento - 1, 0, nombreDelIndent);
