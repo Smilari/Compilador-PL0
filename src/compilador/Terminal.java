@@ -8,6 +8,9 @@ package compilador;
  */
 
 public enum Terminal {
+        HALT,
+        ELSE,
+        DOBLE_IGUAL,
         IF,
         CALL,
         CADENA_LITERAL,
